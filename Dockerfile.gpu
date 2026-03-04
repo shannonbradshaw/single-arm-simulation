@@ -33,15 +33,17 @@ RUN apt-get update && apt-get install -y \
     python3-gz-msgs10 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install flask Pillow numpy
+RUN pip3 install flask Pillow numpy viam-sdk protobuf==3.20.3
 
 # Copy model, world, and application files
 COPY models/ /opt/models/
 COPY worlds/ /opt/worlds/
 COPY web_viewer.py /opt/web_viewer.py
 COPY xarm_emulator.py /opt/xarm_emulator.py
+COPY gz_camera_module /opt/gz_camera_module
+COPY run_camera_module.sh /opt/run_camera_module.sh
 COPY start.sh /opt/start.sh
-RUN chmod +x /opt/start.sh
+RUN chmod +x /opt/start.sh /opt/run_camera_module.sh
 
 ENV GZ_SIM_RESOURCE_PATH=/opt/models
 ENV LIBGL_ALWAYS_SOFTWARE=0
