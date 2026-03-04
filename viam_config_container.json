@@ -1,0 +1,43 @@
+{
+  "modules": [
+    {
+      "type": "local",
+      "name": "viam_ufactory",
+      "executable_path": "/opt/viam-xarm"
+    },
+    {
+      "type": "local",
+      "name": "gazebo_camera",
+      "executable_path": "/opt/run_camera_module.sh"
+    }
+  ],
+  "components": [
+    {
+      "name": "xarm6",
+      "namespace": "rdk",
+      "type": "arm",
+      "model": "viam:ufactory:xArm6",
+      "attributes": {
+        "host": "127.0.0.1",
+        "port": 502,
+        "speed_degs_per_sec": 100,
+        "acceleration_degs_per_sec_per_sec": 200,
+        "move_hz": 20
+      }
+    },
+    {
+      "name": "wrist-cam",
+      "namespace": "rdk",
+      "type": "camera",
+      "model": "viam:camera:gazebo-rgbd",
+      "attributes": {
+        "topic_prefix": "/d435",
+        "width": 1280,
+        "height": 720
+      }
+    }
+  ],
+  "network": {
+    "bind_address": "0.0.0.0:8080"
+  }
+}

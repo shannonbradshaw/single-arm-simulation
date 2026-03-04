@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
     python3-gz-msgs10 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install flask Pillow numpy viam-sdk protobuf==3.20.3
+RUN pip3 install flask Pillow numpy viam-sdk
 
 # Copy model, world, and application files
 COPY models/ /opt/models/
@@ -42,9 +42,20 @@ COPY web_viewer.py /opt/web_viewer.py
 COPY xarm_emulator.py /opt/xarm_emulator.py
 COPY gz_camera_module /opt/gz_camera_module
 COPY run_camera_module.sh /opt/run_camera_module.sh
+COPY viam-xarm-linux /opt/viam-xarm
+COPY viam-server-appimage /opt/viam-server
+COPY viam_config_container.json /opt/viam_config.json
 COPY start.sh /opt/start.sh
-RUN chmod +x /opt/start.sh /opt/run_camera_module.sh
+RUN chmod +x /opt/start.sh /opt/run_camera_module.sh /opt/viam-xarm /opt/viam-server
 
+# AppImage needs FUSE; extract instead
+RUN cd /opt && /opt/viam-server --appimage-extract > /dev/null 2>&1 && \
+    ln -sf /opt/squashfs-root/usr/bin/viam-server /opt/viam-server-bin && \
+    rm /opt/viam-server
+
+# gz-msgs10 system package was compiled against protobuf 3.x; the Python
+# implementation shim lets it coexist with the protobuf 5.x that viam-sdk needs.
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 ENV GZ_SIM_RESOURCE_PATH=/opt/models
 ENV LIBGL_ALWAYS_SOFTWARE=0
 ENV __GLX_VENDOR_LIBRARY_NAME=nvidia
@@ -52,7 +63,7 @@ ENV __NV_PRIME_RENDER_OFFLOAD=1
 ENV __VK_LAYER_NV_optimus=NVIDIA_only
 ENV VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
 
-EXPOSE 502 8081
+EXPOSE 502 8080 8081
 
 WORKDIR /opt
 

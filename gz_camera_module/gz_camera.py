@@ -13,19 +13,29 @@ Attributes:
 import io
 import struct
 import threading
-from typing import Any, ClassVar, Dict, Mapping, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from PIL import Image as PILImage
 
 from viam.components.camera import Camera, DistortionParameters, IntrinsicParameters
-from viam.media.video import CameraMimeType, RawImage
+from viam.media.video import CameraMimeType, NamedImage, ViamImage
 from viam.module.types import Reconfigurable
 from viam.proto.app.robot import ComponentConfig
+from viam.proto.common import ResponseMetadata
+from viam.proto.component.camera import Format, Image as ImageProto
 from viam.resource.base import ResourceBase
 from viam.resource.types import Model, ModelFamily
 
 from gz.msgs10.image_pb2 import Image as GzImage
 from gz.transport13 import Node
+
+# Map CameraMimeType to proto Format enum
+_MIME_TO_FORMAT = {
+    CameraMimeType.JPEG: Format.FORMAT_JPEG,
+    CameraMimeType.PNG: Format.FORMAT_PNG,
+    CameraMimeType.VIAM_RAW_DEPTH: Format.FORMAT_RAW_DEPTH,
+    CameraMimeType.VIAM_RGBA: Format.FORMAT_RAW_RGBA,
+}
 
 
 class GzCamera(Camera, Reconfigurable):
@@ -99,8 +109,8 @@ class GzCamera(Camera, Reconfigurable):
             self._depth_width = msg.width
             self._depth_height = msg.height
 
-    def _get_color_pil(self) -> PILImage.Image:
-        """Convert latest color frame to a PIL Image."""
+    def _get_color_jpeg_bytes(self) -> bytes:
+        """Convert latest color frame to JPEG bytes."""
         with self._color_lock:
             if self._color_data is None:
                 raise RuntimeError("No color frame received yet")
@@ -108,20 +118,10 @@ class GzCamera(Camera, Reconfigurable):
             w = self._color_width
             h = self._color_height
 
-        return PILImage.frombytes("RGB", (w, h), data)
-
-    async def get_image(
-        self,
-        mime_type: str = "",
-        *,
-        timeout: Optional[float] = None,
-        **kwargs,
-    ) -> Union[PILImage.Image, RawImage]:
-        if mime_type and "depth" in mime_type:
-            depth_bytes = self._depth_to_viam_format()
-            return RawImage(data=depth_bytes, mime_type="image/vnd.viam.dep")
-
-        return self._get_color_pil()
+        img = PILImage.frombytes("RGB", (w, h), data)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=90)
+        return buf.getvalue()
 
     def _depth_to_viam_format(self) -> bytes:
         """Convert Gazebo R_FLOAT32 depth to Viam depth map.
@@ -152,6 +152,44 @@ class GzCamera(Camera, Reconfigurable):
 
         return header + bytes(pixels)
 
+    async def get_images(
+        self,
+        *,
+        filter_source_names: Optional[Sequence[str]] = None,
+        extra: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = None,
+        **kwargs,
+    ) -> Tuple[List[NamedImage], ResponseMetadata]:
+        images: List[NamedImage] = []
+
+        # Color image
+        try:
+            color_bytes = self._get_color_jpeg_bytes()
+            images.append(NamedImage("color", color_bytes, CameraMimeType.JPEG))
+        except RuntimeError:
+            pass
+
+        # Depth image
+        try:
+            depth_bytes = self._depth_to_viam_format()
+            images.append(NamedImage("depth", depth_bytes, CameraMimeType.VIAM_RAW_DEPTH))
+        except RuntimeError:
+            pass
+
+        return images, ResponseMetadata()
+
+    def _named_images_to_proto(self, images: List[NamedImage]) -> List[ImageProto]:
+        """Convert NamedImages to proto with format field set."""
+        result = []
+        for img in images:
+            fmt = _MIME_TO_FORMAT.get(img.mime_type, Format.FORMAT_UNSPECIFIED)
+            result.append(ImageProto(
+                source_name=img.name,
+                format=fmt,
+                image=img.data,
+            ))
+        return result
+
     async def get_point_cloud(
         self,
         *,
@@ -177,7 +215,7 @@ class GzCamera(Camera, Reconfigurable):
                 center_x_px=self._width / 2.0,
                 center_y_px=self._height / 2.0,
             ),
-            distortion_parameters=DistortionParameters(model="no_distortion"),
+            distortion_parameters=DistortionParameters(model=""),
         )
 
     async def do_command(
