@@ -519,6 +519,18 @@
         </material>
       </visual>
 
+      <!-- D435 camera stand visual — mesh origin is link_eef frame (= link6) -->
+      <visual name="d435_visual">
+        <geometry>
+          <mesh><uri>model://xarm6/meshes/d435/d435_with_cam_stand.stl</uri></mesh>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.3 1</ambient>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+          <specular>0.4 0.4 0.4 1</specular>
+        </material>
+      </visual>
+
       <collision name="collision">
         <geometry>
           <mesh><uri>model://xarm6/meshes/visual/link6.stl</uri></mesh>
@@ -582,10 +594,12 @@
 
     <!-- ============================================================ -->
     <!--  D435 WRIST CAMERA — Intel RealSense D435 on UFactory mount  -->
-    <!--  Transform from xarm_ros2 realsense_d435i.urdf.xacro         -->
+    <!--  Visual mesh on link6 (mesh origin = link_eef frame).        -->
+    <!--  Sensor on d435_link at camera_link transform.               -->
+    <!--  Transforms from xarm_ros2 realsense_d435i.urdf.xacro        -->
     <!-- ============================================================ -->
 
-    <!-- Fixed joint: link6 -> d435_link (standard UFactory camera stand) -->
+    <!-- Fixed joint: link6 -> d435_link (camera_link frame for sensor) -->
     <joint name="d435_mount" type="fixed">
       <pose relative_to="link6">0.06746 -0.0175 0.0237 3.14159 -1.5708 0</pose>
       <parent>link6</parent>
@@ -607,24 +621,6 @@
           <izz>1.0e-04</izz>
         </inertia>
       </inertial>
-
-      <visual name="visual">
-        <geometry>
-          <mesh><uri>model://xarm6/meshes/d435/d435_with_cam_stand.stl</uri></mesh>
-        </geometry>
-        <material>
-          <ambient>0.3 0.3 0.3 1</ambient>
-          <diffuse>0.2 0.2 0.2 1</diffuse>
-          <specular>0.4 0.4 0.4 1</specular>
-        </material>
-      </visual>
-
-      <collision name="collision">
-        <geometry>
-          <box><size>0.09 0.025 0.025</size></box>
-        </geometry>
-        <surface><contact><collide_bitmask>0x01</collide_bitmask></contact></surface>
-      </collision>
 
       <!-- RGBD camera sensor matching Intel RealSense D435 specs -->
       <sensor name="d435_rgbd" type="rgbd_camera">
