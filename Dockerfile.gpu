@@ -1,0 +1,57 @@
+FROM nvidia/opengl:1.2-glvnd-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Gazebo Harmonic
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    lsb-release \
+    && curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y gz-harmonic \
+    && rm -rf /var/lib/apt/lists/*
+
+# GPU rendering dependencies (EGL, Vulkan)
+RUN apt-get update && apt-get install -y \
+    libegl1-mesa \
+    libegl1 \
+    libgl1-mesa-glx \
+    libgl1 \
+    libglvnd0 \
+    libglx0 \
+    libvulkan1 \
+    mesa-vulkan-drivers \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python + gz-transport bindings for web viewer
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-gz-transport13 \
+    python3-gz-msgs10 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install flask Pillow numpy
+
+# Copy model, world, and application files
+COPY models/ /opt/models/
+COPY worlds/ /opt/worlds/
+COPY web_viewer.py /opt/web_viewer.py
+COPY xarm_emulator.py /opt/xarm_emulator.py
+COPY start.sh /opt/start.sh
+RUN chmod +x /opt/start.sh
+
+ENV GZ_SIM_RESOURCE_PATH=/opt/models
+ENV LIBGL_ALWAYS_SOFTWARE=0
+ENV __GLX_VENDOR_LIBRARY_NAME=nvidia
+ENV __NV_PRIME_RENDER_OFFLOAD=1
+ENV __VK_LAYER_NV_optimus=NVIDIA_only
+ENV VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+
+EXPOSE 502 8081
+
+WORKDIR /opt
+
+CMD ["/opt/start.sh"]

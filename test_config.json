@@ -1,0 +1,24 @@
+{
+  "modules": [
+    {
+      "type": "local",
+      "name": "viam_ufactory",
+      "executable_path": "/tmp/xarm-module/ufactory-xarm"
+    }
+  ],
+  "components": [
+    {
+      "name": "xarm6",
+      "namespace": "rdk",
+      "type": "arm",
+      "model": "viam:ufactory:xArm6",
+      "attributes": {
+        "host": "34.30.31.198",
+        "port": 502,
+        "speed_degs_per_sec": 100,
+        "acceleration_degs_per_sec_per_sec": 200,
+        "move_hz": 20
+      }
+    }
+  ]
+}

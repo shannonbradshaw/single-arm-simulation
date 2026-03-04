@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<!--
+  xArm 6 on a table — minimal world for testing the arm model.
+  Run with: gz sim -s -r worlds/xarm6_table.sdf
+-->
+<sdf version="1.9">
+  <world name="xarm6_world">
+
+    <!-- ==================== PHYSICS ==================== -->
+    <physics name="2ms" type="ignored">
+      <max_step_size>0.002</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>500</real_time_update_rate>
+    </physics>
+
+    <!-- Required plugins -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+
+    <!-- ==================== SCENE ==================== -->
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.2 0.2 0.25 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- ==================== LIGHTING ==================== -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>-0.3 0.2 -1.0</direction>
+    </light>
+
+    <light type="directional" name="fill_light">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 8 0 0 0</pose>
+      <diffuse>0.4 0.4 0.4 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.3 -0.2 -0.8</direction>
+    </light>
+
+    <!-- ==================== GROUND ==================== -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+          <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== TABLE ==================== -->
+    <model name="table">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- Tabletop -->
+      <link name="surface">
+        <pose>0 0 0.74 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.8 0.8 0.04</size></box></geometry>
+          <material>
+            <ambient>0.35 0.3 0.25 1</ambient>
+            <diffuse>0.45 0.38 0.3 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.8 0.8 0.04</size></box></geometry>
+          <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+        </collision>
+      </link>
+
+      <!-- Legs -->
+      <link name="leg1">
+        <pose>0.35 0.35 0.36 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+        </collision>
+      </link>
+
+      <link name="leg2">
+        <pose>-0.35 0.35 0.36 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+        </collision>
+      </link>
+
+      <link name="leg3">
+        <pose>0.35 -0.35 0.36 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+        </collision>
+      </link>
+
+      <link name="leg4">
+        <pose>-0.35 -0.35 0.36 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+          <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ==================== XARM 6 ==================== -->
+    <!-- Arm base sits on the table surface (0.76 = table top) -->
+    <include>
+      <uri>model://xarm6</uri>
+      <pose>0 0 0.76 0 0 0</pose>
+    </include>
+
+
+    <!-- ==================== OVERVIEW CAMERA ==================== -->
+    <!-- Angled view of the arm on the table -->
+    <model name="overview_camera">
+      <static>true</static>
+      <pose>1.2 -1.0 1.5 0 0.4 2.2</pose>
+
+      <link name="camera_body">
+        <visual name="camera_housing">
+          <geometry><box><size>0.04 0.06 0.03</size></box></geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.15 0.15 0.15 1</diffuse>
+          </material>
+        </visual>
+
+        <sensor name="overview_cam" type="camera">
+          <always_on>1</always_on>
+          <update_rate>15</update_rate>
+          <topic>overview_camera</topic>
+          <camera>
+            <horizontal_fov>1.22</horizontal_fov>
+            <image>
+              <width>800</width>
+              <height>600</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>10.0</far>
+            </clip>
+          </camera>
+        </sensor>
+      </link>
+    </model>
+
+  </world>
+</sdf>
