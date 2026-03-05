@@ -195,24 +195,33 @@ Launches 4 processes in order, waits for any to exit, then kills all:
 
 925-line SDF 1.9 model converted from the `xarm_ros2` URDF (jazzy branch). Includes:
 
-- **6 revolute joints** (joint1–joint6) with PID position controllers
+- **6 revolute joints** (joint1–joint6) with position controllers (J1–J3: PID force mode, J4–J6: velocity command mode — see [Gotchas](#key-design-decisions--gotchas))
 - **xArm Gripper** with drive_joint (all finger linkage joints are **fixed**, not revolute — see [Gotchas](#key-design-decisions--gotchas))
 - **D435 camera** on wrist (see below)
-- **Collision bitmasks**: arm links = `0x01`, table/ground = `0x02` (intentionally no arm-table collision — see [Gotchas](#key-design-decisions--gotchas))
+- **Collision bitmasks**: all arm links = `0x00` (no collisions at all — see [Gotchas](#key-design-decisions--gotchas)), table/ground = `0x02`
 
-#### PID Gains
+#### Joint Controller Configuration
 
-Tuned for stability with DART physics at 2ms timestep, 500Hz:
+Tuned for stability with DART physics at 2ms timestep, 500Hz. All PID controllers use `i_max`/`i_min` to prevent integral windup ([gz-sim #1684](https://github.com/gazebosim/gz-sim/issues/1684)).
 
-| Joint | P | I | D | Cmd Limit | Damping |
-|-------|---|---|---|-----------|---------|
-| J1 | 300 | 5 | 100 | ±100 | 20 |
-| J2 | 600 | 10 | 200 | ±150 | 30 |
-| J3 | 300 | 5 | 100 | ±80 | 20 |
-| J4 | 100 | 2 | 50 | ±30 | 15 |
-| J5 | 100 | 2 | 50 | ±30 | 15 |
-| J6 | 20 | 1 | 15 | ±10 | 15 |
-| Gripper | 50 | 1 | 20 | ±10 | 10 |
+**J1–J3 use PID force mode** (JointPositionController with PID gains):
+
+| Joint | P | I | D | Cmd Limit | Damping | Notes |
+|-------|---|---|---|-----------|---------|-------|
+| J1 | 300 | 5 | 100 | ±100 | 20 | Base rotation |
+| J2 | 600 | 10 | 200 | ±150 | 30 | Shoulder (highest gravity load) |
+| J3 | 400 | 10 | 120 | ±150 | 20 | Elbow |
+| Gripper | 50 | 1 | 20 | ±10 | 10 | Drive joint only |
+
+**J4–J6 use velocity command mode** (`<use_velocity_commands>true</use_velocity_commands>`):
+
+| Joint | Cmd Limit (rad/s) | Damping | Notes |
+|-------|-------------------|---------|-------|
+| J4 | ±3.14 | 8 | Wrist rotation |
+| J5 | ±3.14 | 15 | Wrist bend |
+| J6 | ±3.14 | 3 | Tool rotation |
+
+**Why velocity mode for wrist joints?** PID force mode uses `JointForceCmd`, which sets DART's actuator type to FORCE. This actuator type fails to apply sufficient torque on the wrist joints (J4–J6), causing ~28° tracking errors in multi-joint poses. The root cause is a DART physics engine limitation. Velocity command mode bypasses this entirely — the controller computes a velocity command that drives the joint to the target position, achieving sub-1° tracking accuracy on all joints. See [Wrist joint tracking](#wrist-joint-tracking-dart-force-actuator-bug) for details.
 
 ### Intel RealSense D435 Wrist Camera
 
@@ -264,6 +273,8 @@ Bridges UFactory's Private Modbus TCP protocol to Gazebo gz-transport. The real 
 | 0x3E | GRIPPER_SET_POS | Set gripper position |
 | 0x3F | GRIPPER_SET_SPEED | Set gripper speed |
 
+**Joint position reporting**: `GET_JOINT_POS` returns the last *commanded* target positions, not actual Gazebo physics positions. A real xArm's servos hold commanded positions near-perfectly; in sim the PID controllers have small steady-state errors under gravity. Returning actual Gazebo positions would cause the ufactory module's interpolation to accumulate error over successive moves.
+
 **State machine**: Uses time-based idle detection — returns state=1 (moving) while joints are changing, state=2 (idle) after 3 seconds of stability. This avoids polling timeouts that occurred with threshold-based detection.
 
 **Startup**: Publishes home position `[0, -45, -30, 0, 60, 0]°` on startup so the arm begins in a safe pose with the gripper above the table.
@@ -272,9 +283,14 @@ Bridges UFactory's Private Modbus TCP protocol to Gazebo gz-transport. The real 
 
 ## Viam Integration
 
-### viam-server Configuration (`viam_config_container.json`)
+### viam-server Configuration
 
-Runs inside the container. Registers two local modules:
+Two config modes are supported, selected via `VIAM_CONFIG` env var in `start.sh`:
+
+- **Local mode** (default): `viam_config_container.json` — standalone, no cloud connection. Components defined locally.
+- **Cloud mode**: `viam_config_cloud.json` — connects to app.viam.com. Components and modules are managed through the Viam web UI. Use `docker run -e VIAM_CONFIG=/opt/viam_config_cloud.json ...` to enable.
+
+The local config registers two modules:
 
 **Arm module** (`viam:ufactory:xArm6`):
 - Binary: `/opt/viam-xarm` (Go, built from `github.com/viam-modules/viam-ufactory-xarm`)
@@ -312,9 +328,15 @@ Local development config (not used in the container). Points the arm module at t
 
 ## Key Design Decisions & Gotchas
 
-### No arm-table collision (bitmasks)
+### No arm collisions (bitmasks)
 
-At joint angles `[0,0,0,0,0,0]`, the xArm 6 TCP is **6cm below the base** — the gripper goes through the table. Gazebo Harmonic's `<initial_position>` doesn't reliably set spawn angles, so the arm briefly spawns at all-zeros. If table collision is enabled, the arm gets stuck. Solution: arm bitmask `0x01`, table/ground bitmask `0x02`. The safe home position `[0,-45,-30,0,60,0]°` keeps the gripper above the table during normal operation.
+All arm link collision bitmasks are set to `0x00` (no collisions at all). Table and ground use `0x02`. Two reasons:
+
+1. **Arm-table collision**: At joint angles `[0,0,0,0,0,0]`, the xArm 6 TCP is **6cm below the base** — the gripper goes through the table. Gazebo Harmonic's `<initial_position>` doesn't reliably set spawn angles, so the arm briefly spawns at all-zeros and gets stuck if table collision is enabled.
+
+2. **Self-collision**: With bitmask `0x01`, non-adjacent arm links collide with each other. This creates constraint forces of 100+ Nm that the PID controllers can't overcome, causing 27–31° tracking errors on wrist joints (J4, J5, J6). Setting bitmask to `0x00` eliminates both arm-table and arm-self collisions.
+
+The safe home position `[0,-45,-30,0,60,0]°` keeps the gripper above the table during normal operation.
 
 ### Fixed gripper finger joints
 
@@ -332,11 +354,22 @@ The Python Viam SDK's `CameraRPCService.GetImages` handler builds `Image` protos
 
 viam-server's AppImage extracts a binary with interpreter `lib64/ld-linux-x86-64.so.2` (relative, not `/lib64/...`). This fails inside Docker because the CWD isn't the squashfs-root. Invoking via the system linker explicitly works: `/lib64/ld-linux-x86-64.so.2 /opt/squashfs-root/usr/bin/viam-server`.
 
+### Wrist joint tracking (DART FORCE actuator bug)
+
+J4, J5, and J6 all exhibit the same problem with PID force mode: Gazebo's `JointPositionController` uses `JointForceCmd` to apply torque, which sets DART's actuator type to FORCE. This actuator type bypasses joint friction and fails to apply sufficient torque under dynamic multi-joint loads. Symptoms:
+
+- **J5**: stuck at ~17° instead of target 60° (42° error), regardless of PID gain values
+- **J4, J6**: track correctly at home position but drift ~28° when other joints move simultaneously
+
+The fix is `<use_velocity_commands>true</use_velocity_commands>` in the JointPositionController plugin. This mode computes a velocity command rather than a force command, which DART handles correctly. Result: sub-1° tracking on all joints, zero coupling between joints.
+
+**Do NOT use `<initial_position>` inside `<axis>` elements.** This is not valid SDF. Gazebo warns "XML Element[initial_position], child of element[axis], not defined in SDF. Copying[initial_position] as children of [axis]." The unrecognized element causes unpredictable joint behavior. Only use `<initial_position>` inside JointPositionController plugins.
+
 ### Physics tuning
 
 - **2ms timestep** (500Hz): Required for PID stability. At 10ms the arm oscillates visibly.
 - **High damping** (15–30 Nm·s/rad): Prevents overshoot. J2 has the highest damping (30) because it bears the most gravity load.
-- **Command limits**: Prevent integral windup from saturating actuators.
+- **Command limits**: `i_max`/`i_min` on PID controllers prevent integral windup ([gz-sim #1684](https://github.com/gazebosim/gz-sim/issues/1684)). `cmd_max`/`cmd_min` limit force output (PID mode) or velocity (velocity mode).
 
 ### Network latency
 
@@ -349,6 +382,7 @@ The Viam xArm module sends interpolated waypoints via MOVE_SERVOJ at `move_hz=20
 ```
 single-arm-simulation/
 ├── ARCHITECTURE.md              ← This file
+├── CLAUDE.md                    ← AI assistant context (key decisions, PID gains, gotchas)
 ├── Dockerfile                   ← CPU-only image (no GPU, xvfb-based, no viam-server)
 ├── Dockerfile.gpu               ← GPU image with viam-server + modules (production)
 ├── start.sh                     ← Container entrypoint: starts all 4 services
@@ -356,15 +390,18 @@ single-arm-simulation/
 ├── xarm_emulator.py             ← xArm TCP protocol ↔ gz-transport bridge
 ├── web_viewer.py                ← Flask app serving camera feed on port 8081
 ├── run_camera_module.sh         ← Shell wrapper to launch gz_camera_module
-├── viam_config_container.json   ← viam-server config (in-container, both modules)
+├── viam_config_container.json   ← viam-server config (local mode, both modules)
+├── viam_config_cloud.json       ← viam-server config (cloud mode, app.viam.com)
 ├── test_config.json             ← viam-server config (local dev, external IP)
+├── test_arm_joints.py           ← Automated joint movement test suite (SDK + Gazebo verification)
+├── quick_diag.py                ← Quick diagnostic: home move + J5 tracking check
 ├── gz_camera_module/
 │   ├── __init__.py
 │   ├── main.py                  ← Module entry point + GetImages proto patch
 │   └── gz_camera.py             ← GzCamera component (gz-transport → Viam Camera API)
 ├── models/
 │   └── xarm6/
-│       ├── model.sdf            ← xArm 6 + gripper + D435 camera (925 lines)
+│       ├── model.sdf            ← xArm 6 + gripper + D435 camera (~920 lines)
 │       ├── model.config
 │       └── meshes/
 │           ├── visual/          ← Arm link STL meshes
@@ -416,7 +453,7 @@ sudo docker build -f Dockerfile.gpu -t xarm6-sim-gpu:latest .
 # Stop existing container if running
 sudo docker rm -f xarm6-full 2>/dev/null
 
-# Run with GPU access
+# Run with GPU access — LOCAL mode (standalone, no cloud)
 sudo docker run -d \
   --name xarm6-full \
   --runtime=nvidia \
@@ -425,16 +462,27 @@ sudo docker run -d \
   -p 8080:8080 \
   -p 8081:8081 \
   xarm6-sim-gpu:latest
+
+# Or CLOUD mode (connects to app.viam.com)
+sudo docker run -d \
+  --name xarm6-full \
+  --runtime=nvidia \
+  --gpus all \
+  -p 502:502 \
+  -p 8080:8080 \
+  -p 8081:8081 \
+  -e VIAM_CONFIG=/opt/viam_config_cloud.json \
+  xarm6-sim-gpu:latest
 ```
 
 ### Sync local changes to VM
 
 ```bash
-# From your local machine
-gcloud compute scp --recurse \
+# From your local machine (use --tunnel-through-iap if direct SSH times out)
+gcloud compute scp --tunnel-through-iap --recurse \
   --zone=us-central1-a \
   /path/to/single-arm-simulation/ \
-  xarm6-sim:~/single-arm-simulation/
+  shannon.bradshaw@xarm6-sim:~/single-arm-simulation/
 ```
 
 (Exclude the large binaries — they should already be on the VM.)
@@ -473,9 +521,34 @@ asyncio.run(main())
 # Expected output includes: 'xarm6', 'wrist-cam'
 ```
 
+### Automated joint movement tests
+
+`test_arm_joints.py` exercises all 6 joints through single-joint sweeps, multi-joint poses, and coupling analysis. It connects via the Viam SDK and optionally reads actual Gazebo joint states via gcloud SSH for physics-level verification.
+
+```bash
+# Set credentials (from Viam app CONNECT tab, or use local mode with direct IP)
+export VIAM_API_KEY="..."
+export VIAM_API_KEY_ID="..."
+export VIAM_ADDRESS="xarm6-sim-main.XXXXX.viam.cloud"
+
+# Run all tests
+python3 test_arm_joints.py --test all
+
+# Or run specific suites
+python3 test_arm_joints.py --test single    # Single-joint sweeps (22 moves)
+python3 test_arm_joints.py --test multi     # Multi-joint poses (7 moves)
+python3 test_arm_joints.py --test coupling  # Coupling analysis (7 moves)
+```
+
+All 74 tests pass with the current configuration (velocity mode for J4–J6, bitmask 0x00).
+
+### Quick diagnostic
+
+`quick_diag.py` moves to home and tests J5 at several angles — useful for quickly verifying the simulation is tracking correctly after changes.
+
 ### End-to-end arm + camera test
 
-See the [Quick Start](#quick-start) example. A full test script that moves through 4 poses and captures images at each is at `/tmp/e2e_camera_test.py` on the development machine (not in the repo).
+See the [Quick Start](#quick-start) example.
 
 ### Web viewer
 
@@ -506,6 +579,10 @@ If you see `TypeError` or `AttributeError` from protobuf-related code, verify th
 ### Gripper passes through table
 
 This is intentional. See [No arm-table collision](#no-arm-table-collision-bitmasks). The safe home position `[0,-45,-30,0,60,0]°` keeps the gripper above the table.
+
+### SSH to VM times out
+
+Use IAP tunneling: `gcloud compute ssh --tunnel-through-iap shannon.bradshaw@xarm6-sim --zone=us-central1-a`. This also applies to `gcloud compute scp`.
 
 ### viam-server "No such file or directory"
 

@@ -370,8 +370,15 @@ class ProtocolHandler:
         return self._resp(tid, reg)
 
     def _get_joint_pos(self, tid, reg, params):
-        """Return 7 joint positions as float32 LE."""
-        positions = self.gz.get_joint_positions()
+        """Return 7 joint positions as float32 LE.
+
+        Returns the last commanded target positions rather than actual Gazebo
+        positions. A real xArm's internal servo holds commanded positions
+        near-perfectly; in sim the PID controllers drift under gravity, which
+        causes the ufactory module's interpolation to accumulate error.
+        """
+        with self.arm.lock:
+            positions = list(self.arm.target_positions)
         data = b"\x00"  # state byte
         for pos in positions:
             data += struct.pack("<f", pos)

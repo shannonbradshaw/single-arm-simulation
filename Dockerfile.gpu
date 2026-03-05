@@ -45,6 +45,7 @@ COPY run_camera_module.sh /opt/run_camera_module.sh
 COPY viam-xarm-linux /opt/viam-xarm
 COPY viam-server-appimage /opt/viam-server
 COPY viam_config_container.json /opt/viam_config.json
+COPY viam_config_cloud.json /opt/viam_config_cloud.json
 COPY start.sh /opt/start.sh
 RUN chmod +x /opt/start.sh /opt/run_camera_module.sh /opt/viam-xarm /opt/viam-server
 

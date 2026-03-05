@@ -17,11 +17,11 @@ Read `ARCHITECTURE.md` for full architecture diagrams, build/deploy instructions
 ## Key Architecture Decisions
 
 - Python for emulator (gz-transport Python bindings work well)
-- PID force mode (NOT velocity mode) for JointPositionController — velocity mode has DART actuator type issues
-- Collision bitmasks: arm=0x01, table=0x02, ground=0x02 (arm passes through table intentionally)
+- PID force mode for J1-J3 (shoulder/elbow), velocity command mode for J4-J6 (wrist) — DART FORCE actuator fails on wrist joints causing ~28° tracking errors
+- Collision bitmasks: arm=0x00, table=0x02, ground=0x02 (arm has NO collisions — self-collision caused 27-31° tracking errors on wrist joints)
 - Physics timestep: 2ms (0.002), 500Hz update rate — needed for PID stability
 - Gripper finger joints: all fixed (not revolute) — eliminates jitter from unactuated DOFs
-- Safe home position: [0, -45, -30, 0, 60, 0] degrees — gripper above table
+- Safe home position: [0, -45, -30, 0, 60, 0] degrees — canonical starting pose, gripper above table. Always use this as the initial arm pose.
 
 ## Why No Arm-Table Collision
 
@@ -34,14 +34,18 @@ At all-zeros, the xArm6 TCP is 6cm BELOW the base (gripper through table). Gazeb
 3. **Jitter**: High P gains + low damping caused visible oscillation. Fixed by reducing P gains, increasing D gains, increasing joint damping (15-30 Nm·s/rad), fixing gripper finger joints, reducing timestep to 2ms.
 4. **Gripper-in-table at home**: TCP at -6cm below base at all-zeros. Fixed with safe home [0,-45,-30,0,60,0]°.
 
-## PID Gains (current working values)
+## Joint Controller Configuration (current working values)
 
-- J1: P=300, I=5, D=100, cmd=±100, damping=20
-- J2: P=600, I=10, D=200, cmd=±150, damping=30 (gravity load)
-- J3: P=300, I=5, D=100, cmd=±80, damping=20
-- J4: P=100, I=2, D=50, cmd=±30, damping=15
-- J5: P=100, I=2, D=50, cmd=±30, damping=15
-- J6: P=20, I=1, D=15, cmd=±10, damping=15
+All controllers use `i_max`/`i_min` to prevent integral windup (gz-sim #1684).
+Collision bitmask on all arm links is 0x00 (no collisions) to prevent self-collision forces.
+Invalid `<initial_position>` inside `<axis>` elements MUST NOT be used — Gazebo copies the unrecognized element, causing unpredictable joint behavior.
+
+- J1: P=300, I=5, D=100, cmd=±100, damping=20 (PID force mode)
+- J2: P=600, I=10, D=200, cmd=±150, damping=30 (PID force mode, gravity load)
+- J3: P=400, I=10, D=120, cmd=±150, damping=20 (PID force mode)
+- J4: velocity commands mode (use_velocity_commands=true), cmd=±3.14 rad/s, damping=8. PID force mode has DART actuator issues causing ~28° offsets in multi-joint poses.
+- J5: velocity commands mode (use_velocity_commands=true), cmd=±3.14 rad/s, damping=15. PID force mode does NOT work — DART FORCE actuator fails to apply sufficient torque.
+- J6: velocity commands mode (use_velocity_commands=true), cmd=±3.14 rad/s, damping=3. PID force mode has DART actuator issues causing ~28° offsets in multi-joint poses.
 - Gripper drive: P=50, I=1, D=20, cmd=±10, damping=10
 
 ## Protocol Details
