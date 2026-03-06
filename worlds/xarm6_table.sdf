@@ -75,14 +75,15 @@
     </model>
 
     <!-- ==================== TABLE ==================== -->
+    <!-- Single-link table (bullet-featherstone requires connected link trees) -->
     <model name="table">
       <static>true</static>
       <pose>0 0 0 0 0 0</pose>
 
-      <!-- Tabletop -->
-      <link name="surface">
-        <pose>0 0 0.74 0 0 0</pose>
-        <visual name="visual">
+      <link name="body">
+        <!-- Tabletop -->
+        <visual name="surface_visual">
+          <pose>0 0 0.74 0 0 0</pose>
           <geometry><box><size>0.8 0.8 0.04</size></box></geometry>
           <material>
             <ambient>0.35 0.3 0.25 1</ambient>
@@ -90,68 +91,68 @@
             <specular>0.2 0.2 0.2 1</specular>
           </material>
         </visual>
-        <collision name="collision">
+        <collision name="surface_collision">
+          <pose>0 0 0.74 0 0 0</pose>
           <geometry><box><size>0.8 0.8 0.04</size></box></geometry>
           <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
         </collision>
-      </link>
 
-      <!-- Legs -->
-      <link name="leg1">
-        <pose>0.35 0.35 0.36 0 0 0</pose>
-        <visual name="visual">
+        <!-- Leg 1 -->
+        <visual name="leg1_visual">
+          <pose>0.35 0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <material>
             <ambient>0.3 0.3 0.3 1</ambient>
             <diffuse>0.4 0.4 0.4 1</diffuse>
           </material>
         </visual>
-        <collision name="collision">
+        <collision name="leg1_collision">
+          <pose>0.35 0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
         </collision>
-      </link>
 
-      <link name="leg2">
-        <pose>-0.35 0.35 0.36 0 0 0</pose>
-        <visual name="visual">
+        <!-- Leg 2 -->
+        <visual name="leg2_visual">
+          <pose>-0.35 0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <material>
             <ambient>0.3 0.3 0.3 1</ambient>
             <diffuse>0.4 0.4 0.4 1</diffuse>
           </material>
         </visual>
-        <collision name="collision">
+        <collision name="leg2_collision">
+          <pose>-0.35 0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
         </collision>
-      </link>
 
-      <link name="leg3">
-        <pose>0.35 -0.35 0.36 0 0 0</pose>
-        <visual name="visual">
+        <!-- Leg 3 -->
+        <visual name="leg3_visual">
+          <pose>0.35 -0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <material>
             <ambient>0.3 0.3 0.3 1</ambient>
             <diffuse>0.4 0.4 0.4 1</diffuse>
           </material>
         </visual>
-        <collision name="collision">
+        <collision name="leg3_collision">
+          <pose>0.35 -0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
         </collision>
-      </link>
 
-      <link name="leg4">
-        <pose>-0.35 -0.35 0.36 0 0 0</pose>
-        <visual name="visual">
+        <!-- Leg 4 -->
+        <visual name="leg4_visual">
+          <pose>-0.35 -0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <material>
             <ambient>0.3 0.3 0.3 1</ambient>
             <diffuse>0.4 0.4 0.4 1</diffuse>
           </material>
         </visual>
-        <collision name="collision">
+        <collision name="leg4_collision">
+          <pose>-0.35 -0.35 0.36 0 0 0</pose>
           <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
           <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
         </collision>

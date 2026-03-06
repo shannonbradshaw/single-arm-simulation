@@ -127,6 +127,8 @@ class GazeboBridge:
         self._publishers[grip_topic] = self.node.advertise(grip_topic, GzDouble)
         log(f"Advertise {grip_topic}: OK")
 
+        # Right knuckle mirrors left via fixed joint — no separate topic needed
+
     def _on_joint_states(self, msg):
         """Callback for Gazebo joint state messages."""
         try:
@@ -166,12 +168,17 @@ class GazeboBridge:
                 pub.publish(msg)
 
     def set_gripper_position(self, value):
-        """Publish gripper command (protocol 0-850 → joint 0-0.85 rad)."""
+        """Publish gripper command (protocol 0-850 → joint 0-0.85 rad).
+
+        Protocol: 0=closed, 850=open.  Gazebo: 0=open, 0.85=closed.
+        Invert: gz_rad = (850 - value) / 1000.
+        Right knuckle mirrors left via fixed joint in SDF.
+        """
         topic = f"{TOPIC_PREFIX}/gripper/cmd_pos"
         pub = self._publishers.get(topic)
         if pub:
             msg = GzDouble()
-            msg.data = max(0.0, min(0.85, value / 1000.0))
+            msg.data = max(0.0, min(0.85, (850 - value) / 1000.0))
             pub.publish(msg)
 
 
@@ -434,7 +441,8 @@ class ProtocolHandler:
             reg_addr = struct.unpack_from(">H", params, 3)[0]
 
             if reg_addr == GRIP_CURR_POS:
-                pos = self.gz.get_gripper_position()
+                with self.arm.lock:
+                    pos = self.arm.gripper_target
                 data = bytes([0x00, host_id, device_id, modbus_func, 0x04])
                 data += struct.pack(">i", pos)
                 return self._resp(tid, reg, data)

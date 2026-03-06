@@ -40,6 +40,7 @@ COPY models/ /opt/models/
 COPY worlds/ /opt/worlds/
 COPY web_viewer.py /opt/web_viewer.py
 COPY xarm_emulator.py /opt/xarm_emulator.py
+COPY gripper_mimic.py /opt/gripper_mimic.py
 COPY gz_camera_module /opt/gz_camera_module
 COPY run_camera_module.sh /opt/run_camera_module.sh
 COPY viam-xarm-linux /opt/viam-xarm
@@ -58,6 +59,8 @@ RUN cd /opt && /opt/viam-server --appimage-extract > /dev/null 2>&1 && \
 # implementation shim lets it coexist with the protobuf 5.x that viam-sdk needs.
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 ENV GZ_SIM_RESOURCE_PATH=/opt/models
+ENV GZ_SIM_SYSTEM_PLUGIN_PATH=/opt
+ENV PYTHONPATH=/opt
 ENV LIBGL_ALWAYS_SOFTWARE=0
 ENV __GLX_VENDOR_LIBRARY_NAME=nvidia
 ENV __NV_PRIME_RENDER_OFFLOAD=1

@@ -29,6 +29,7 @@
       <joint_name>joint5</joint_name>
       <joint_name>joint6</joint_name>
       <joint_name>drive_joint</joint_name>
+      <joint_name>right_outer_knuckle_joint</joint_name>
     </plugin>
 
     <!-- Joint position controllers — one per actuated joint -->
@@ -112,20 +113,23 @@
       <initial_position>0</initial_position>
     </plugin>
 
-    <!-- Gripper drive joint -->
+    <!-- Gripper drive joint — left knuckle (velocity mode for DART) -->
     <plugin filename="gz-sim-joint-position-controller-system"
             name="gz::sim::systems::JointPositionController">
       <joint_name>drive_joint</joint_name>
       <topic>xarm6/gripper/cmd_pos</topic>
-      <p_gain>50</p_gain>
-      <i_gain>1</i_gain>
-      <i_max>1</i_max>
-      <i_min>-1</i_min>
-      <d_gain>20</d_gain>
-      <cmd_max>10</cmd_max>
-      <cmd_min>-10</cmd_min>
-      <initial_position>0</initial_position>
+      <use_velocity_commands>true</use_velocity_commands>
+      <cmd_max>3.14</cmd_max>
+      <cmd_min>-3.14</cmd_min>
     </plugin>
+
+    <!-- Right finger mirrors left via Python system plugin (bypasses DART
+         controller limitation by setting joint position directly each step) -->
+    <plugin filename="gz-sim-python-system-loader-system"
+            name="gz::sim::systems::PythonSystemLoader">
+      <module_name>gripper_mimic</module_name>
+    </plugin>
+
 
     <!-- ============================================================ -->
     <!--  ARM BASE                                                     -->
@@ -708,11 +712,16 @@
       </collision>
     </link>
 
-    <!-- Left finger (fixed to left_outer_knuckle — no independent actuation) -->
-    <joint name="left_finger_joint" type="fixed">
+    <!-- Left finger (mimic drive_joint x-1, keeps fingertip parallel) -->
+    <joint name="left_finger_joint" type="revolute">
       <pose relative_to="left_outer_knuckle">0 0.035465 0.042039 0 0 0</pose>
       <parent>left_outer_knuckle</parent>
       <child>left_finger</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit><lower>-0.85</lower><upper>0</upper><effort>0</effort><velocity>0</velocity></limit>
+        <dynamics><damping>10.0</damping><friction>2.0</friction></dynamics>
+      </axis>
     </joint>
 
     <link name="left_finger">
@@ -750,11 +759,16 @@
       </collision>
     </link>
 
-    <!-- Left inner knuckle (fixed to gripper_base — no independent actuation) -->
-    <joint name="left_inner_knuckle_joint" type="fixed">
+    <!-- Left inner knuckle (mimic drive_joint x1) -->
+    <joint name="left_inner_knuckle_joint" type="revolute">
       <pose relative_to="gripper_base_link">0 0.02 0.074098 0 0 0</pose>
       <parent>gripper_base_link</parent>
       <child>left_inner_knuckle</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit><lower>0</lower><upper>0.85</upper><effort>0</effort><velocity>0</velocity></limit>
+        <dynamics><damping>10.0</damping><friction>2.0</friction></dynamics>
+      </axis>
     </joint>
 
     <link name="left_inner_knuckle">
@@ -794,11 +808,24 @@
 
     <!-- ===== Right finger assembly (mirrors left side) ===== -->
 
-    <!-- Right outer knuckle (fixed to gripper_base — no independent actuation) -->
-    <joint name="right_outer_knuckle_joint" type="fixed">
+    <!-- Right outer knuckle (mimic drive_joint x-1, closes toward center) -->
+    <joint name="right_outer_knuckle_joint" type="revolute">
       <pose relative_to="gripper_base_link">0 -0.035 0.059098 0 0 0</pose>
       <parent>gripper_base_link</parent>
       <child>right_outer_knuckle</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.85</lower>
+          <upper>0</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <damping>10.0</damping>
+          <friction>2.0</friction>
+        </dynamics>
+      </axis>
     </joint>
 
     <link name="right_outer_knuckle">
@@ -836,11 +863,16 @@
       </collision>
     </link>
 
-    <!-- Right finger (fixed to right_outer_knuckle — no independent actuation) -->
-    <joint name="right_finger_joint" type="fixed">
+    <!-- Right finger (mimic drive_joint x1, keeps fingertip parallel) -->
+    <joint name="right_finger_joint" type="revolute">
       <pose relative_to="right_outer_knuckle">0 -0.035465 0.042039 0 0 0</pose>
       <parent>right_outer_knuckle</parent>
       <child>right_finger</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit><lower>0</lower><upper>0.85</upper><effort>0</effort><velocity>0</velocity></limit>
+        <dynamics><damping>10.0</damping><friction>2.0</friction></dynamics>
+      </axis>
     </joint>
 
     <link name="right_finger">
@@ -878,11 +910,16 @@
       </collision>
     </link>
 
-    <!-- Right inner knuckle (fixed to gripper_base — no independent actuation) -->
-    <joint name="right_inner_knuckle_joint" type="fixed">
+    <!-- Right inner knuckle (mimic drive_joint x-1) -->
+    <joint name="right_inner_knuckle_joint" type="revolute">
       <pose relative_to="gripper_base_link">0 -0.02 0.074098 0 0 0</pose>
       <parent>gripper_base_link</parent>
       <child>right_inner_knuckle</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit><lower>-0.85</lower><upper>0</upper><effort>0</effort><velocity>0</velocity></limit>
+        <dynamics><damping>10.0</damping><friction>2.0</friction></dynamics>
+      </axis>
     </joint>
 
     <link name="right_inner_knuckle">
