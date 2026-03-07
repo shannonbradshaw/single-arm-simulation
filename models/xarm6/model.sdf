@@ -156,9 +156,9 @@
           <mesh><uri>model://xarm6/meshes/visual/link_base.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.9 0.9 0.92 1</ambient>
-          <diffuse>0.95 0.95 0.97 1</diffuse>
-          <specular>0.8 0.8 0.8 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -221,9 +221,9 @@
           <mesh><uri>model://xarm6/meshes/visual/link1.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.9 0.9 0.92 1</ambient>
-          <diffuse>0.95 0.95 0.97 1</diffuse>
-          <specular>0.8 0.8 0.8 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -280,9 +280,9 @@
           <mesh><uri>model://xarm6/meshes/visual/link2.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.9 0.9 0.92 1</ambient>
-          <diffuse>0.95 0.95 0.97 1</diffuse>
-          <specular>0.8 0.8 0.8 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -339,9 +339,9 @@
           <mesh><uri>model://xarm6/meshes/visual/link3.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.9 0.9 0.92 1</ambient>
-          <diffuse>0.95 0.95 0.97 1</diffuse>
-          <specular>0.8 0.8 0.8 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -398,9 +398,9 @@
           <mesh><uri>model://xarm6/meshes/visual/link4.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.9 0.9 0.92 1</ambient>
-          <diffuse>0.95 0.95 0.97 1</diffuse>
-          <specular>0.8 0.8 0.8 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -457,9 +457,9 @@
           <mesh><uri>model://xarm6/meshes/visual/link5.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.9 0.9 0.92 1</ambient>
-          <diffuse>0.95 0.95 0.97 1</diffuse>
-          <specular>0.8 0.8 0.8 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -528,9 +528,9 @@
           <mesh><uri>model://xarm6/meshes/d435/d435_with_cam_stand.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.3 0.3 0.3 1</ambient>
-          <diffuse>0.2 0.2 0.2 1</diffuse>
-          <specular>0.4 0.4 0.4 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -576,9 +576,9 @@
           <mesh><uri>model://xarm6/meshes/gripper/base_link.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.9 0.9 0.92 1</ambient>
-          <diffuse>0.95 0.95 0.97 1</diffuse>
-          <specular>0.8 0.8 0.8 1</specular>
+          <ambient>0.7 0.7 0.72 1</ambient>
+          <diffuse>0.75 0.75 0.77 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
         </material>
       </visual>
 
@@ -698,9 +698,9 @@
           <mesh><uri>model://xarm6/meshes/gripper/left_outer_knuckle.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.7 0.7 0.72 1</ambient>
-          <diffuse>0.75 0.75 0.77 1</diffuse>
-          <specular>0.9 0.9 0.9 1</specular>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.08 0.08 0.08 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
         </material>
       </visual>
 
@@ -745,9 +745,9 @@
           <mesh><uri>model://xarm6/meshes/gripper/left_finger.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.7 0.7 0.72 1</ambient>
-          <diffuse>0.75 0.75 0.77 1</diffuse>
-          <specular>0.9 0.9 0.9 1</specular>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.08 0.08 0.08 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
         </material>
       </visual>
 
@@ -792,9 +792,9 @@
           <mesh><uri>model://xarm6/meshes/gripper/left_inner_knuckle.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.7 0.7 0.72 1</ambient>
-          <diffuse>0.75 0.75 0.77 1</diffuse>
-          <specular>0.9 0.9 0.9 1</specular>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.08 0.08 0.08 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
         </material>
       </visual>
 
@@ -849,9 +849,9 @@
           <mesh><uri>model://xarm6/meshes/gripper/right_outer_knuckle.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.7 0.7 0.72 1</ambient>
-          <diffuse>0.75 0.75 0.77 1</diffuse>
-          <specular>0.9 0.9 0.9 1</specular>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.08 0.08 0.08 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
         </material>
       </visual>
 
@@ -896,9 +896,9 @@
           <mesh><uri>model://xarm6/meshes/gripper/right_finger.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.7 0.7 0.72 1</ambient>
-          <diffuse>0.75 0.75 0.77 1</diffuse>
-          <specular>0.9 0.9 0.9 1</specular>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.08 0.08 0.08 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
         </material>
       </visual>
 
@@ -943,9 +943,9 @@
           <mesh><uri>model://xarm6/meshes/gripper/right_inner_knuckle.stl</uri></mesh>
         </geometry>
         <material>
-          <ambient>0.7 0.7 0.72 1</ambient>
-          <diffuse>0.75 0.75 0.77 1</diffuse>
-          <specular>0.9 0.9 0.9 1</specular>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.08 0.08 0.08 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
         </material>
       </visual>
 
