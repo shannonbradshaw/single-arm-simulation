@@ -96,13 +96,13 @@ class GzCamera(Camera, Reconfigurable):
         self._node = Node()
 
         if "color" in self._sensors:
-            topic = f"{self._topic_prefix}/color/image"
+            topic = f"{self._topic_prefix}/color"
             ok = self._node.subscribe(GzImage, topic, self._on_color)
             print(f"[gz-camera] Subscribe {topic}: {'OK' if ok else 'FAILED'}",
                   flush=True)
 
         if "depth" in self._sensors:
-            topic = f"{self._topic_prefix}/depth/image"
+            topic = f"{self._topic_prefix}/depth"
             ok = self._node.subscribe(GzImage, topic, self._on_depth)
             print(f"[gz-camera] Subscribe {topic}: {'OK' if ok else 'FAILED'}",
                   flush=True)
