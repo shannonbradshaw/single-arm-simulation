@@ -1,7 +1,8 @@
-"""Viam module entry point for the Gazebo RGBD camera.
+"""Viam module entry point for simulated Intel RealSense D435.
 
 Patches the SDK's CameraRPCService.GetImages to set the proto Format enum
-field (needed by viam-server's Go code), then registers GzCamera and starts.
+field (needed by viam-server's Go code), then registers GzCamera as
+viam:camera:realsense and starts.
 Run as: python3 -m gz_camera_module.main <socket_path>
 """
 

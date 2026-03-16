@@ -7,7 +7,7 @@
     },
     {
       "type": "local",
-      "name": "gazebo_camera",
+      "name": "viam_realsense",
       "executable_path": "/opt/run_camera_module.sh"
     }
   ],
@@ -29,11 +29,12 @@
       "name": "wrist-cam",
       "namespace": "rdk",
       "type": "camera",
-      "model": "viam:camera:gazebo-rgbd",
+      "model": "viam:camera:realsense",
       "attributes": {
-        "topic_prefix": "/d435",
-        "width": 1280,
-        "height": 720
+        "sensors": ["color", "depth"],
+        "width_px": 1280,
+        "height_px": 720,
+        "topic_prefix": "/d435"
       }
     }
   ],
